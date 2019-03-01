@@ -41,6 +41,7 @@
  */
 const char *days[] = {"", "PAZ", "PZT", "SAL", "CAR", "PER", "CUM", "CTS"};
 const char *mons[] = {"", "OCA", "SUB", "MAR", "NIS", "MAY", "HAZ", "TEM", "AGU", "EYL", "EKI", "KAS", "ARA"};
+const char *messages[] = {"", "Message1", "Message2", "Message3", "Message4", "Message5", "Message6", "Message7"};
  
 /*
  * GLOBAL VARIABLES
@@ -52,7 +53,7 @@ const int buttonPin = 4;
 bool h12;
 bool PM;
 bool century = false;
-int hour, minute, second;
+
 // State machine states
 enum DeviceState { NORMAL, SET_SELECTION, SET_VALUE };
 DeviceState deviceState = NORMAL;
@@ -68,7 +69,9 @@ void displaySecond(int second);
 void displayDate(int date);
 void displayDoW(int dow);
 void displayYear(int year);
+void displayMessage();
 void displayDateTime();
+void displayDateTimeWithMessage();
 void displayTemp();
 void displayX();
 bool isButtonPressed();
@@ -185,6 +188,13 @@ void displayYear(int year)
   display.print(year);  
 }
 
+void displayMessage(int messageNumber)
+{
+  display.setTextSize(2);
+  display.setCursor(2, 2);
+  display.print(messages[messageNumber]);  
+}
+
 // Displays month, day of month, day of week, year, hour, minute, and second indicator on OLED at the positions defined by macros
 void displayDateTime()
 {  
@@ -195,6 +205,29 @@ void displayDateTime()
   displayHour(Clock.getHour(h12, PM));  
   displayMinute(Clock.getMinute());  
   displaySecond(Clock.getSecond());
+}
+
+void displayDateTimeWithMessage()
+{
+  int minute = Clock.getMinute();  
+  int dow = Clock.getDoW();
+  
+  if (minute == 0) {    
+    displayHour(Clock.getHour(h12, PM));  
+    displayMinute(minute);  
+    displaySecond(Clock.getSecond());
+    displayMessage(dow);              
+  }
+  else {
+    displayDate(Clock.getDate());
+    displayMonth(Clock.getMonth(century));  
+    displayDoW(dow);
+    displayYear(Clock.getYear());    
+    displayHour(Clock.getHour(h12, PM));  
+    displayMinute(minute);  
+    displaySecond(Clock.getSecond());
+    displayTemp();
+  }
 }
 
 // Displays temperature value on OLED at position defined by macro
@@ -257,8 +290,7 @@ int boundVal(int val, int minVal, int maxVal)
 void normalState()
 {  
   display.clearDisplay();
-  displayDateTime();
-  displayTemp();
+  displayDateTimeWithMessage();  
 
   if (isButtonPressed())
     deviceState = SET_SELECTION;
@@ -377,8 +409,23 @@ void setValueState()
   
   if (isButtonPressed()) {
     switch (menuSelection) {      
+      case 1:
+        Clock.setDate(setValue);
+        break;
+      case 2:
+        Clock.setMonth(setValue);
+        break;
+      case 3:
+        Clock.setDoW(setValue);
+        break;
+      case 4:
+        Clock.setYear(setValue);
+        break;
       case 5:
         Clock.setHour(setValue);
+        break;
+      case 6:
+        Clock.setMinute(setValue);
         break;      
     }
     deviceState = SET_SELECTION;
